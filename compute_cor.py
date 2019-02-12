@@ -1,14 +1,16 @@
 #!  /usr/local/bin/python3
+# command SOURCE_TSV SOURCE_IMG_1 SOURCE_IMG_2 TARGET_FILE(.cor)
 
+import sys
 import numpy as np
 from skimage import io, img_as_ubyte
 from matplotlib import pyplot as plt
 
 # parameters
-SOURCE_TSV = "./test.tsv"
-SOURCE_IMG_1 = "./sample-img/CON-1-3_R3D_D3D_VOL_w525.tif"
-SOURCE_IMG_2 = "./sample-img/CON-1-3_R3D_D3D_VOL_w676.tif"
-TARGET_FILE = "./test_output"
+SOURCE_TSV = sys.argv[1]
+SOURCE_IMG_1 = sys.argv[2]
+SOURCE_IMG_2 = sys.argv[3]
+TARGET_FILE = sys.argv[4]+".cor"
 
 nuclei_list = []
 with open(SOURCE_TSV, "r") as f:
@@ -27,11 +29,7 @@ for i in nuclei_list:
 	img_1_seg = usr_img_1[min_row:max_row, min_col:max_col].flatten()
 	img_2_seg = usr_img_2[min_row:max_row, min_col:max_col].flatten()
 	brightness_cor.append(np.corrcoef(img_1_seg, img_2_seg)[0,1])
-print(brightness_cor)
 
-# fig, ax = plt.subplots(nrows=1, ncols=2)
-# ax[0].imshow(usr_img_1, cmap="gray")
-# ax[0].set_title("img1")
-# ax[1].imshow(usr_img_2, cmap="gray")
-# ax[1].set_title("img2")
-# fig.savefig(TARGET_FILE+".pdf", dpi=600, bbox_inches="tight")
+with open(TARGET_FILE, "w") as f:
+	for i in brightness_cor:
+		f.write("%s\n" % i)
