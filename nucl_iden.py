@@ -27,8 +27,8 @@ CLOSING_ORDER = np.arange(1, 999, ITER_STEP)
 SOURCE_FILE = sys.argv[1]
 TARGET_FILE = sys.argv[2]
 
-test_img = img_as_ubyte(io.imread(SOURCE_FILE))
-thres_img = test_img > threshold_otsu(test_img)
+usr_img = img_as_ubyte(io.imread(SOURCE_FILE))
+thres_img = usr_img > threshold_otsu(usr_img)
 filled_img = binary_fill_holes(thres_img)
 
 iter_remaining = NUM_ITER
@@ -44,7 +44,7 @@ while iter_remaining > 0:
 
 	regions = regionprops(labels)
 	temp_list = []
-	temp_img = test_img
+	temp_img = usr_img
 	for i in regions:
 		obj_area = i.area
 		obj_bbox_area = i.bbox_area
@@ -81,6 +81,6 @@ ax[1].set_title("selected")
 if SHOW_IMG == True:
 	fig.show()
 elif SAVE_FILE == True:
-	fig.savefig(TARGET_FILE, dpi=600, bbox_inches="tight")
+	fig.savefig(TARGET_FILE+".pdf", dpi=600, bbox_inches="tight")
 
 
