@@ -33,6 +33,7 @@ filled_img = binary_fill_holes(thres_img)
 
 iter_remaining = NUM_ITER
 num_of_nuclei = 0
+temp_list = []
 while iter_remaining > 0:
 	watershed_mask = filled_img # TRUE values will be used for watershed
 	dist = ndi.distance_transform_edt(filled_img)
@@ -43,7 +44,6 @@ while iter_remaining > 0:
 	labels = watershed(-dist, markers, mask=watershed_mask)
 
 	regions = regionprops(labels)
-	temp_list = []
 	temp_img = usr_img
 	for i in regions:
 		obj_area = i.area
@@ -62,6 +62,8 @@ while iter_remaining > 0:
 			continue
 		print("No.{} in interation {}/{}".format(num_of_nuclei,
 			NUM_ITER-iter_remaining+1, NUM_ITER))
+		temp_list.append([int(round(obj_cen_row)), int(round(obj_cen_col)),\
+			obj_min_row, obj_min_col, obj_max_row, obj_max_col])
 		num_of_nuclei += 1
 		temp_img[obj_min_row:obj_max_row, obj_min_col] = 255
 		temp_img[obj_min_row:obj_max_row, obj_max_col] = 255
@@ -82,5 +84,10 @@ if SHOW_IMG == True:
 	fig.show()
 elif SAVE_FILE == True:
 	fig.savefig(TARGET_FILE+".pdf", dpi=600, bbox_inches="tight")
+	with open(TARGET_FILE+".tsv", "w") as f:
+		for i in temp_list:
+			for j in i:
+				f.write("%s\t" % j)
+			f.write("\n")
 
 
