@@ -30,6 +30,8 @@ for i in nuclei_list:
 	img_2_seg = usr_img_2[min_row:max_row, min_col:max_col].flatten()
 	brightness_cor.append(np.corrcoef(img_1_seg, img_2_seg)[0,1])
 
+print("Corr median:{} min:{} max:{}".format(np.median(brightness_cor),\
+	np.min(brightness_cor), np.max(brightness_cor)))
 with open(TARGET_FILE, "w") as f:
 	for i in brightness_cor:
 		f.write("%s\n" % i)
