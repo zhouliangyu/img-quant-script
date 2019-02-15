@@ -75,13 +75,10 @@ while iter_remaining > 0:
 	filled_img = binary_fill_holes(filled_img)
 	iter_remaining -= 1
 
-fig, ax = plt.subplots(nrows=1, ncols=2)
-ax[0].imshow(filled_img, cmap="gray")
-ax[0].set_title("filled")
-ax[1].imshow(temp_img)
-ax[1].set_title("selected")
+fig = plt.figure()
+plt.imshow(temp_img)
 if SHOW_IMG == True:
-	fig.show()
+	plt.show()
 elif SAVE_FILE == True:
 	fig.savefig(TARGET_FILE+".pdf", dpi=600, bbox_inches="tight")
 	with open(TARGET_FILE+".tsv", "w") as f:
