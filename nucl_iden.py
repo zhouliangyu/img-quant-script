@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3
-# ./command SOURCE_FILE TARGET_FILE(.pdf)
+# ./command SOURCE_FILE TARGET_FILE(.pdf/.tsv)
 
 import sys
 
@@ -60,7 +60,7 @@ while iter_remaining > 0:
 		if obj_bbox_ratio < BBOX_RATIO_THRES or \
 			obj_bbox_ratio > 1/BBOX_RATIO_THRES:
 			continue
-		print("No.{} in interation {}/{}".format(num_of_nuclei,
+		print("No.{} in iteration {}/{}".format(num_of_nuclei,
 			NUM_ITER-iter_remaining+1, NUM_ITER))
 		temp_list.append([int(round(obj_cen_row)), int(round(obj_cen_col)),\
 			obj_min_row, obj_min_col, obj_max_row, obj_max_col])

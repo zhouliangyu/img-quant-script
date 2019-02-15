@@ -1,18 +1,20 @@
 #!  /usr/local/bin/python3
-# command SOURCE_TSV SOURCE_IMG_1 SOURCE_IMG_2 TARGET_FILE(.cor)
+# command SOURCE_TSV SOURCE_IMG_1 SOURCE_IMG_2 TARGET_FILE
 
 import sys
 import numpy as np
 from skimage import io, img_as_ubyte
 from skimage.filters import threshold_otsu
 from matplotlib import pyplot as plt
+from scipy.stats import zscore
 
 # parameters
 SOURCE_TSV = sys.argv[1]
 SOURCE_IMG_1 = sys.argv[2]
 SOURCE_IMG_2 = sys.argv[3]
-TARGET_FILE = sys.argv[4]+".cor"
+TARGET_FILE = sys.argv[4]
 FORE_ONLY = True
+SCALE_NORM = True
 
 nuclei_list = []
 with open(SOURCE_TSV, "r") as f:
@@ -34,6 +36,9 @@ for i in nuclei_list:
 		img_1_thresh = threshold_otsu(img_1_seg)
 		img_1_binary = img_1_seg > img_1_thresh
 		img_1_binary = img_1_binary.flatten()
+		if SCALE_NORM == True:
+			img_1_seg = zscore(img_1_seg)
+			img_2_seg = zscore(img_2_seg)
 		img_1_seg = img_1_seg.flatten()
 		img_2_seg = img_2_seg.flatten()
 		img_1_temp = np.array([])
