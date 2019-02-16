@@ -15,7 +15,7 @@ SOURCE_IMG_2 = sys.argv[3]
 TARGET_FILE = sys.argv[4]
 FORE_ONLY = True
 LOCAL_OTSU = True
-LOCAL_COEF = 5
+LOCAL_COEF = 1
 PROP_CORR = True
 
 nuclei_list = []
@@ -36,7 +36,7 @@ for i in nuclei_list:
 	img_2_seg = usr_img_2[min_row:max_row, min_col:max_col]
 	if FORE_ONLY:
 		if LOCAL_OTSU:
-			shape_index = round(min(img_1_seg.shape)/5)
+			shape_index = round(min(img_1_seg.shape)/LOCAL_COEF)
 			img_1_thresh = rank.otsu(img_1_seg, disk(shape_index))
 			img_2_thresh = rank.otsu(img_2_seg, disk(shape_index))
 		else:
