@@ -1,0 +1,7 @@
+#!  /usr/local/bin/bash
+
+rootname=$1
+~/code/img-quant-script/nucl_iden.py $rootname"435.tif" temp
+~/code/img-quant-script/compute_cor.py temp.tsv $rootname"525.tif" $rootname"676.tif" temp
+rm temp.tsv temp.pdf
+

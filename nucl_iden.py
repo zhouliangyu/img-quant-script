@@ -77,9 +77,9 @@ while iter_remaining > 0:
 
 fig = plt.figure()
 plt.imshow(temp_img)
-if SHOW_IMG == True:
+if SHOW_IMG:
 	plt.show()
-elif SAVE_FILE == True:
+elif SAVE_FILE:
 	fig.savefig(TARGET_FILE+".pdf", dpi=600, bbox_inches="tight")
 	with open(TARGET_FILE+".tsv", "w") as f:
 		for i in temp_list:
