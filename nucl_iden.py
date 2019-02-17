@@ -80,16 +80,13 @@ while iter_remaining > 0:
 		   obj_bbox_ratio > 1/params['BBOX_RATIO_THRES']: continue
 		print("No.{} in iteration {}/{}".format(num_of_nuclei,
 			params['NUM_ITER']-iter_remaining+1, params['NUM_ITER']))
-
 		temp_list.append([int(round(obj_cen_row))+params['ROI_MIN_ROW'], \
 		                  int(round(obj_cen_col))+params['ROI_MIN_COL'], \
                           obj_min_row+params['ROI_MIN_ROW'], \
                           obj_min_col+params['ROI_MIN_COL'], \
                           obj_max_row+params['ROI_MIN_ROW'], \
                           obj_max_col+params['ROI_MIN_COL']])
-
 		num_of_nuclei += 1
-
 		ori_usr_img[obj_min_row+params['ROI_MIN_ROW']:obj_max_row+params['ROI_MIN_ROW'], obj_min_col+params['ROI_MIN_COL']] = 255
 		ori_usr_img[obj_min_row+params['ROI_MIN_ROW']:obj_max_row+params['ROI_MIN_ROW'], obj_max_col+params['ROI_MIN_COL']] = 255
 		ori_usr_img[obj_min_row+params['ROI_MIN_ROW'], obj_min_col+params['ROI_MIN_COL']:obj_max_col+params['ROI_MIN_COL']] = 255
