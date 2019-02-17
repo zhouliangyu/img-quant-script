@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3
-# ./command SOURCE_FILE TARGET_FILE(.pdf/.tsv)
+# ./command SOURCE_FILE CONFIG_FILE
 
 import sys
 
@@ -14,24 +14,34 @@ import numpy as np
 from scipy.ndimage.morphology import binary_fill_holes
 from scipy import ndimage as ndi
 
-# parameters
-SHOW_IMG = False
-SAVE_FILE = True
-MIN_OBJ_AREA = 900 # a good pach nucleus is about 1500
-MAX_OBJ_AREA = 2000
-BBOX_RATIO_THRES = 0.5
-NUM_ITER = 75
-ITER_STEP = 0.4
-CLOSING_ORDER = np.arange(1, 999, ITER_STEP)
-
 SOURCE_FILE = sys.argv[1]
-TARGET_FILE = sys.argv[2]
+CONFIG_FILE = sys.argv[2]
+
+# default parameters
+params = {}
+params['SHOW_IMG'] = 0
+params['SAVE_FILE'] = 1
+params['MIN_OBJ_AREA'] = 900 # a good pach nucleus is about 1500
+params['MAX_OBJ_AREA'] = 2000
+params['BBOX_RATIO_THRES'] = 0.5
+params['NUM_ITER'] = 75
+params['ITER_STEP'] = 0.4
+params['TEXT_RENDER'] = 1
+# load config file
+with open(CONFIG_FILE, "r") as f:
+	usr_params = f.read().splitlines()
+for i in usr_params:
+	if i[0] != "#":
+		usr_params = i.split(":")
+		params[usr_params[0]] = float(usr_params[1])
+
+CLOSING_ORDER = np.arange(1, 999, params['ITER_STEP'])
 
 usr_img = img_as_ubyte(io.imread(SOURCE_FILE))
 thres_img = usr_img > threshold_otsu(usr_img)
 filled_img = binary_fill_holes(thres_img)
 
-iter_remaining = NUM_ITER
+iter_remaining = params['NUM_ITER']
 num_of_nuclei = 0
 temp_list = []
 while iter_remaining > 0:
@@ -55,13 +65,13 @@ while iter_remaining > 0:
 		if obj_max_col > temp_img.shape[1]-1:
 			obj_max_col = temp_img.shape[1]-1
 		obj_bbox_ratio = (obj_max_row-obj_min_row)/(obj_max_col-obj_min_col)
-		if obj_area < MIN_OBJ_AREA or obj_area > MAX_OBJ_AREA:
-			continue
-		if obj_bbox_ratio < BBOX_RATIO_THRES or \
-			obj_bbox_ratio > 1/BBOX_RATIO_THRES:
+		if obj_area < params['MIN_OBJ_AREA'] or \
+		   obj_area > params['MAX_OBJ_AREA']: continue
+		if obj_bbox_ratio < params['BBOX_RATIO_THRES'] or \
+		   obj_bbox_ratio > 1/params['BBOX_RATIO_THRES']:
 			continue
 		print("No.{} in iteration {}/{}".format(num_of_nuclei,
-			NUM_ITER-iter_remaining+1, NUM_ITER))
+			params['NUM_ITER']-iter_remaining+1, params['NUM_ITER']))
 		temp_list.append([int(round(obj_cen_row)), int(round(obj_cen_col)),\
 			obj_min_row, obj_min_col, obj_max_row, obj_max_col])
 		num_of_nuclei += 1
@@ -77,11 +87,15 @@ while iter_remaining > 0:
 
 fig = plt.figure()
 plt.imshow(temp_img)
-if SHOW_IMG:
+if params['TEXT_RENDER']:
+	for i in temp_list:
+		plt.text(i[1],i[0], "r{}c{}".format(i[0],i[1]), color="white",\
+		fontsize=3)
+if params['SHOW_IMG']:
 	plt.show()
-elif SAVE_FILE:
-	fig.savefig(TARGET_FILE+".pdf", dpi=600, bbox_inches="tight")
-	with open(TARGET_FILE+".tsv", "w") as f:
+elif params['SAVE_FILE']:
+	fig.savefig(SOURCE_FILE+".pdf", dpi=600, bbox_inches="tight")
+	with open(SOURCE_FILE+".tsv", "w") as f:
 		for i in temp_list:
 			for j in i:
 				f.write("%s\t" % j)
