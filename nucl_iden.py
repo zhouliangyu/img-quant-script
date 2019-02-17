@@ -33,7 +33,10 @@ with open(CONFIG_FILE, "r") as f:
 for i in usr_params:
 	if i[0] != "#":
 		usr_params = i.split(":")
-		params[usr_params[0]] = float(usr_params[1])
+		try:
+			params[usr_params[0]] = int(usr_params[1])
+		except ValueError:
+			params[usr_params[0]] = float(usr_params[1])
 
 CLOSING_ORDER = np.arange(1, 999, params['ITER_STEP'])
 
@@ -80,8 +83,8 @@ while iter_remaining > 0:
 		temp_img[obj_min_row, obj_min_col:obj_max_col] = 255
 		temp_img[obj_max_row, obj_min_col:obj_max_col] = 255
 		filled_img[obj_min_row:obj_max_row, obj_min_col:obj_max_col] = 0
-	filled_img = closing(filled_img, square(int(round(CLOSING_ORDER[NUM_ITER - \
-		iter_remaining]))))
+	filled_img = closing(filled_img, \
+	square(int(round(CLOSING_ORDER[params['NUM_ITER'] - iter_remaining]))))
 	filled_img = binary_fill_holes(filled_img)
 	iter_remaining -= 1
 
