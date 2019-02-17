@@ -16,9 +16,14 @@ from scipy import ndimage as ndi
 
 SOURCE_FILE = sys.argv[1]
 CONFIG_FILE = sys.argv[2]
+ori_usr_img = img_as_ubyte(io.imread(SOURCE_FILE))
 
 # default parameters
 params = {}
+params['ROI_MIN_ROW'] = 0
+params['ROI_MIN_COL'] = 0
+params['ROI_MAX_ROW'] = ori_usr_img.shape[0] - 1
+params['ROI_MAX_COL'] = ori_usr_img.shape[1] - 1
 params['SHOW_IMG'] = 0
 params['SAVE_FILE'] = 1
 params['MIN_OBJ_AREA'] = 900 # a good pach nucleus is about 1500
@@ -40,7 +45,9 @@ for i in usr_params:
 
 CLOSING_ORDER = np.arange(1, 999, params['ITER_STEP'])
 
-usr_img = img_as_ubyte(io.imread(SOURCE_FILE))
+
+usr_img = ori_usr_img[params['ROI_MIN_ROW']:params['ROI_MAX_ROW'], \
+                  params['ROI_MIN_COL']:params['ROI_MAX_COL']]
 thres_img = usr_img > threshold_otsu(usr_img)
 filled_img = binary_fill_holes(thres_img)
 
@@ -48,14 +55,13 @@ iter_remaining = params['NUM_ITER']
 num_of_nuclei = 0
 temp_list = []
 while iter_remaining > 0:
-	watershed_mask = filled_img # TRUE values will be used for watershed
+	watershed_mask = filled_img
 	dist = ndi.distance_transform_edt(filled_img)
 	footprint_min = np.ones((3,3)) # minimum footprint for finding local max, not helpful if too big - e.g. set to 10, even very easily found nuclei got missed
 	local_max = peak_local_max(dist, indices=False, footprint=footprint_min,
 		labels=filled_img)
 	markers = ndi.label(local_max)[0]
 	labels = watershed(-dist, markers, mask=watershed_mask)
-
 	regions = regionprops(labels)
 	temp_img = usr_img
 	for i in regions:
@@ -71,17 +77,24 @@ while iter_remaining > 0:
 		if obj_area < params['MIN_OBJ_AREA'] or \
 		   obj_area > params['MAX_OBJ_AREA']: continue
 		if obj_bbox_ratio < params['BBOX_RATIO_THRES'] or \
-		   obj_bbox_ratio > 1/params['BBOX_RATIO_THRES']:
-			continue
+		   obj_bbox_ratio > 1/params['BBOX_RATIO_THRES']: continue
 		print("No.{} in iteration {}/{}".format(num_of_nuclei,
 			params['NUM_ITER']-iter_remaining+1, params['NUM_ITER']))
-		temp_list.append([int(round(obj_cen_row)), int(round(obj_cen_col)),\
-			obj_min_row, obj_min_col, obj_max_row, obj_max_col])
+
+		temp_list.append([int(round(obj_cen_row))+params['ROI_MIN_ROW'], \
+		                  int(round(obj_cen_col))+params['ROI_MIN_COL'], \
+                          obj_min_row+params['ROI_MIN_ROW'], \
+                          obj_min_col+params['ROI_MIN_COL'], \
+                          obj_max_row+params['ROI_MIN_ROW'], \
+                          obj_max_col+params['ROI_MIN_COL']])
+
 		num_of_nuclei += 1
-		temp_img[obj_min_row:obj_max_row, obj_min_col] = 255
-		temp_img[obj_min_row:obj_max_row, obj_max_col] = 255
-		temp_img[obj_min_row, obj_min_col:obj_max_col] = 255
-		temp_img[obj_max_row, obj_min_col:obj_max_col] = 255
+
+		ori_usr_img[obj_min_row+params['ROI_MIN_ROW']:obj_max_row+params['ROI_MIN_ROW'], obj_min_col+params['ROI_MIN_COL']] = 255
+		ori_usr_img[obj_min_row+params['ROI_MIN_ROW']:obj_max_row+params['ROI_MIN_ROW'], obj_max_col+params['ROI_MIN_COL']] = 255
+		ori_usr_img[obj_min_row+params['ROI_MIN_ROW'], obj_min_col+params['ROI_MIN_COL']:obj_max_col+params['ROI_MIN_COL']] = 255
+		ori_usr_img[obj_max_row+params['ROI_MIN_ROW'], obj_min_col+params['ROI_MIN_COL']:obj_max_col+params['ROI_MIN_COL']] = 255
+
 		filled_img[obj_min_row:obj_max_row, obj_min_col:obj_max_col] = 0
 	filled_img = closing(filled_img, \
 	square(int(round(CLOSING_ORDER[params['NUM_ITER'] - iter_remaining]))))
@@ -89,7 +102,7 @@ while iter_remaining > 0:
 	iter_remaining -= 1
 
 fig = plt.figure()
-plt.imshow(temp_img)
+plt.imshow(ori_usr_img)
 if params['TEXT_RENDER']:
 	for i in temp_list:
 		plt.text(i[1],i[0], "r{}c{}".format(i[0],i[1]), color="white",\
