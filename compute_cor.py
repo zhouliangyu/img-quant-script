@@ -15,7 +15,7 @@ SOURCE_IMG_2 = sys.argv[3]
 TARGET_FILE = sys.argv[4]
 FORE_ONLY = True
 LOCAL_OTSU = True
-LOCAL_COEF = 1
+LOCAL_COEF = 2
 PROP_CORR = True
 
 nuclei_list = []

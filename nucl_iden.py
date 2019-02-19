@@ -51,8 +51,9 @@ usr_img = ori_usr_img[params['ROI_MIN_ROW']:params['ROI_MAX_ROW'], \
 thres_img = usr_img > threshold_otsu(usr_img)
 filled_img = binary_fill_holes(thres_img)
 
+
 iter_remaining = params['NUM_ITER']
-num_of_nuclei = 0
+num_of_nuclei = 1
 temp_list = []
 while iter_remaining > 0:
 	watershed_mask = filled_img
@@ -76,8 +77,14 @@ while iter_remaining > 0:
 		obj_bbox_ratio = (obj_max_row-obj_min_row)/(obj_max_col-obj_min_col)
 		if obj_area < params['MIN_OBJ_AREA'] or \
 		   obj_area > params['MAX_OBJ_AREA']: continue
-		if obj_bbox_ratio < params['BBOX_RATIO_THRES'] or \
-		   obj_bbox_ratio > 1/params['BBOX_RATIO_THRES']: continue
+
+		RATIO_MIN_LIMIT = min(params['BBOX_RATIO_THRES'], \
+							1/params['BBOX_RATIO_THRES'])
+		RATIO_MAX_LIMIT = max(params['BBOX_RATIO_THRES'], \
+							1/params['BBOX_RATIO_THRES'])
+		if obj_bbox_ratio < RATIO_MIN_LIMIT or \
+		   obj_bbox_ratio > RATIO_MAX_LIMIT: continue
+
 		print("No.{} in iteration {}/{}".format(num_of_nuclei,
 			params['NUM_ITER']-iter_remaining+1, params['NUM_ITER']))
 		temp_list.append([int(round(obj_cen_row))+params['ROI_MIN_ROW'], \
@@ -85,13 +92,12 @@ while iter_remaining > 0:
                           obj_min_row+params['ROI_MIN_ROW'], \
                           obj_min_col+params['ROI_MIN_COL'], \
                           obj_max_row+params['ROI_MIN_ROW'], \
-                          obj_max_col+params['ROI_MIN_COL']])
+                          obj_max_col+params['ROI_MIN_COL'], num_of_nuclei])
 		num_of_nuclei += 1
 		ori_usr_img[obj_min_row+params['ROI_MIN_ROW']:obj_max_row+params['ROI_MIN_ROW'], obj_min_col+params['ROI_MIN_COL']] = 255
 		ori_usr_img[obj_min_row+params['ROI_MIN_ROW']:obj_max_row+params['ROI_MIN_ROW'], obj_max_col+params['ROI_MIN_COL']] = 255
 		ori_usr_img[obj_min_row+params['ROI_MIN_ROW'], obj_min_col+params['ROI_MIN_COL']:obj_max_col+params['ROI_MIN_COL']] = 255
 		ori_usr_img[obj_max_row+params['ROI_MIN_ROW'], obj_min_col+params['ROI_MIN_COL']:obj_max_col+params['ROI_MIN_COL']] = 255
-
 		filled_img[obj_min_row:obj_max_row, obj_min_col:obj_max_col] = 0
 	filled_img = closing(filled_img, \
 	square(int(round(CLOSING_ORDER[params['NUM_ITER'] - iter_remaining]))))
@@ -102,8 +108,8 @@ fig = plt.figure()
 plt.imshow(ori_usr_img)
 if params['TEXT_RENDER']:
 	for i in temp_list:
-		plt.text(i[1],i[0], "r{}c{}".format(i[0],i[1]), color="white",\
-		fontsize=3)
+		plt.text(i[3],i[0], "n{}\nr{}\nc{}".format(i[6],i[0],i[1]),\
+		color="white", fontsize=3)
 if params['SHOW_IMG']:
 	plt.show()
 elif params['SAVE_FILE']:
