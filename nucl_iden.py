@@ -4,8 +4,8 @@
 import sys
 
 from skimage import io, img_as_ubyte
-from skimage.filters import threshold_otsu
-from skimage.morphology import watershed, closing, square
+from skimage.filters import threshold_otsu, rank
+from skimage.morphology import watershed, closing, square, disk
 from skimage.feature import peak_local_max
 from skimage.measure import regionprops
 
@@ -32,6 +32,8 @@ params['BBOX_RATIO_THRES'] = 0.5
 params['NUM_ITER'] = 75
 params['ITER_STEP'] = 0.4
 params['TEXT_RENDER'] = 1
+params['LOCAL_OTSU'] = 0
+params['LOCAL_OTSU_FAC'] = 15
 # load config file
 with open(CONFIG_FILE, "r") as f:
 	usr_params = f.read().splitlines()
@@ -48,7 +50,12 @@ CLOSING_ORDER = np.arange(1, 999, params['ITER_STEP'])
 
 usr_img = ori_usr_img[params['ROI_MIN_ROW']:params['ROI_MAX_ROW'], \
                   params['ROI_MIN_COL']:params['ROI_MAX_COL']]
-thres_img = usr_img > threshold_otsu(usr_img)
+
+if not params['LOCAL_OTSU']:
+	thres_img = usr_img > threshold_otsu(usr_img)
+else:
+	thres_img = usr_img >= rank.otsu(usr_img, disk(params['LOCAL_OTSU_FAC']))
+
 filled_img = binary_fill_holes(thres_img)
 
 
