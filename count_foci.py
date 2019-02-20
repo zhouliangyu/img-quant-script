@@ -21,16 +21,21 @@ FOCI_FILE = sys.argv[3]
 CONFIG_FILE = sys.argv[4]
 # default params
 params = {}
-params['OTSU_FAC'] = 5
+params['OTSU_FAC'] = 7
 params['DILATION_FAC'] = 2
-params['MIN_SIGMA'] = 0.4
-params['MAX_SIGMA'] = 50
+params['MIN_SIGMA'] = 0.41
+params['MAX_SIGMA'] = 100
 params['NUM_SIGMA'] = 20
-params['BACK_THRES'] = 0.05
+params['BACK_THRES'] = 0.06
 params['OVERLAP_RATIO'] = 0.5
 params['FOCI_GRAPH'] = 1
 params['NUM_GRAPH_PAIR'] = 3
 params['FONT_SIZE'] = 8
+params['SPLIT_LIST'] = 0
+params['BOUND_X1'] = 1
+params['BOUND_Y1'] = 2
+params['BOUND_X2'] = 3
+params['BOUND_Y2'] = 4
 # load config file
 with open(CONFIG_FILE, "r") as f:
 	usr_params = f.read().splitlines()
@@ -66,7 +71,6 @@ for i in nuclei_list:
 	foci = blob_log(roi_foci, min_sigma=params['MIN_SIGMA'], \
 		max_sigma=params['MAX_SIGMA'], num_sigma=params['NUM_SIGMA'],\
 		threshold=params['BACK_THRES'], overlap=params['OVERLAP_RATIO'])
-	# X, cen_row, cen_col, foci_num, foci_list, off_list
 	on_list = []
 	off_list = []
 	for j in foci:
@@ -79,17 +83,60 @@ for i in nuclei_list:
 		else:
 			off_list.append(j)
 			if focus_row >= roi_binary.shape[0]:
-				print("X={}, focus_row={} >= binary.shape[0]={}".format(int(i[6]), focus_row, roi_binary.shape[0]))
+				print("X={}, focus_row={} >= binary.shape[0]={}".format \
+				     (int(i[6]), focus_row, roi_binary.shape[0]))
 			elif focus_col >= roi_binary.shape[1]:
-				print("X={}, focus_col={} >= binary.shape[1]={}".format(int(i[6]), focus_col, roi_binary.shape[1]))
+				print("X={}, focus_col={} >= binary.shape[1]={}".format \
+					 (int(i[6]), focus_col, roi_binary.shape[1]))
 			elif not roi_binary[focus_row, focus_col]:
-				print("X={}, roi_binary[{},{}]={}".format(int(i[6]),focus_row,focus_col, roi_binary[focus_row, focus_col]))
+				print("X={}, roi_binary[{},{}]={}".format \
+				     (int(i[6]),focus_row,focus_col, \
+					  roi_binary[focus_row, focus_col]))
+	# X, cen_row, cen_col, foci_num, foci_list, off_list
 	foci_list.append([int(i[6]),int(i[0]),int(i[1]),len(on_list), \
 					  on_list,off_list])
 
-# console log the foci_list
+# write list to file
+output_list = []
 for i in foci_list:
-	print(i[:-2])
+	output_list.append(i[:-2])
+if not params['SPLIT_LIST']:
+	# X, cen_row, cen_col, foci_num
+	with open(FOCI_FILE+".tsv", "w") as f:
+		for i in output_list:
+			for j in i:
+				f.write("%s\t" % j)
+			f.write("\n")
+else:
+	x1 = params['BOUND_X1']
+	y1 = params['BOUND_Y1']
+	x2 = params['BOUND_X2']
+	y2 = params['BOUND_Y2']
+	print("Divided by [{},{}] and [{},{}]".format(x1,y1,x2,y2))
+	slope = (y2-y1)/(x2-x1)
+	intercept = slope*(-x1)+y1
+	print("y = ax + b, a = {}, b = {}". format(slope,intercept))
+	output_list_1 = []
+	output_list_2 = []
+	for i in output_list:
+		usr_x = i[1]
+		usr_y = i[2]
+		theo_y = usr_x * slope + intercept
+		if theo_y < usr_y:
+			output_list_1.append(i)
+		else:
+			output_list_2.append(i)
+	with open(FOCI_FILE+"-split1.tsv", "w") as f:
+		for i in output_list_1:
+			for j in i:
+				f.write("%s\t" % j)
+			f.write("\n")
+	with open(FOCI_FILE+"-split2.tsv", "w") as f:
+		for i in output_list_2:
+			for j in i:
+				f.write("%s\t" % j)
+			f.write("\n")
+
 
 if params['FOCI_GRAPH']:
 	random_list = []
