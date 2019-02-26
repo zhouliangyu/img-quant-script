@@ -1,5 +1,5 @@
 #!/usr/local/bin/python3
-# ./command SOURCE_FILE CONFIG_FILE
+# command SOURCE_FILE CONFIG_FILE
 
 import sys
 
@@ -13,6 +13,10 @@ from matplotlib import pyplot as plt
 import numpy as np
 from scipy.ndimage.morphology import binary_fill_holes
 from scipy import ndimage as ndi
+
+if len(sys.argv) < 3:
+	print("command SOURCE_FILE CONFIG_FILE")
+	sys.exit()
 
 SOURCE_FILE = sys.argv[1]
 CONFIG_FILE = sys.argv[2]
@@ -92,7 +96,7 @@ while iter_remaining > 0:
 		if obj_bbox_ratio < RATIO_MIN_LIMIT or \
 		   obj_bbox_ratio > RATIO_MAX_LIMIT: continue
 
-		print("No.{} in iteration {}/{}".format(num_of_nuclei,
+		print("X={} in iteration {}/{}".format(num_of_nuclei,
 			params['NUM_ITER']-iter_remaining+1, params['NUM_ITER']))
 		temp_list.append([int(round(obj_cen_row))+params['ROI_MIN_ROW'], \
 		                  int(round(obj_cen_col))+params['ROI_MIN_COL'], \
@@ -115,7 +119,7 @@ fig = plt.figure()
 plt.imshow(ori_usr_img)
 if params['TEXT_RENDER']:
 	for i in temp_list:
-		plt.text(i[3],i[0], "n{}\nr{}\nc{}".format(i[6],i[0],i[1]),\
+		plt.text(i[3],i[0], "x{}\nr{}\nc{}".format(i[6],i[0],i[1]),\
 		color="white", fontsize=3)
 if params['SHOW_IMG']:
 	plt.show()

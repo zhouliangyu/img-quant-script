@@ -29,7 +29,7 @@ params['NUM_SIGMA'] = 20
 params['BACK_THRES'] = 0.06
 params['OVERLAP_RATIO'] = 0.5
 params['FOCI_GRAPH'] = 1
-params['NUM_GRAPH_PAIR'] = 3
+params['NUM_GRAPH_PAIR'] = 6
 params['FONT_SIZE'] = 8
 params['SPLIT_LIST'] = 0
 params['BOUND_X1'] = 1
@@ -71,6 +71,7 @@ for i in nuclei_list:
 	foci = blob_log(roi_foci, min_sigma=params['MIN_SIGMA'], \
 		max_sigma=params['MAX_SIGMA'], num_sigma=params['NUM_SIGMA'],\
 		threshold=params['BACK_THRES'], overlap=params['OVERLAP_RATIO'])
+	print("X={}, list generated".format(int(i[6])))
 	on_list = []
 	off_list = []
 	for j in foci:
@@ -80,6 +81,7 @@ for i in nuclei_list:
 		   focus_col < roi_binary.shape[1] and \
 		   roi_binary[focus_row,focus_col]:
 			on_list.append(j)
+			print("X={}, + 1".format(int(i[6])))
 		else:
 			off_list.append(j)
 			if focus_row >= roi_binary.shape[0]:
@@ -89,9 +91,8 @@ for i in nuclei_list:
 				print("X={}, focus_col={} >= binary.shape[1]={}".format \
 					 (int(i[6]), focus_col, roi_binary.shape[1]))
 			elif not roi_binary[focus_row, focus_col]:
-				print("X={}, roi_binary[{},{}]={}".format \
-				     (int(i[6]),focus_row,focus_col, \
-					  roi_binary[focus_row, focus_col]))
+				print("X={}, off from roi_binary[{},{}]".format \
+				     (int(i[6]),focus_row,focus_col))
 	# X, cen_row, cen_col, foci_num, foci_list, off_list
 	foci_list.append([int(i[6]),int(i[0]),int(i[1]),len(on_list), \
 					  on_list,off_list])
@@ -139,9 +140,10 @@ else:
 
 
 if params['FOCI_GRAPH']:
+	plt.rcParams.update({'font.size':4})
 	random_list = []
 	for i in range(params['NUM_GRAPH_PAIR']):
-		random_list.append(random.randint(0, len(foci_list)))
+		random_list.append(random.randint(0, len(foci_list)-1))
 	fig, ax = plt.subplots(nrows=params['NUM_GRAPH_PAIR'], ncols=3)
 	for i in range(params['NUM_GRAPH_PAIR']):
 		pos=random_list[i]
@@ -174,7 +176,7 @@ if params['FOCI_GRAPH']:
 				fontsize=params['FONT_SIZE'], color="lightblue")
 			ax[i][2].text(round(j[1]), round(j[0]), "*", \
 				fontsize=params['FONT_SIZE'], color="lightblue")
-		ax[i][0].set_title("X={}".format(pos_x))
+		ax[i][0].set_title("X{}".format(pos_x))
 		ax[i][2].set_title("Total {}({})".format(pos_blobs_num, \
 									             pos_blobs_off_num))
 	plt.savefig("foci_diag.pdf")
